@@ -21,13 +21,18 @@ const userSchema =new mongoose.Schema({
 const User = mongoose.model("user",userSchema);
 app.post('/signin',async (req,res)=>{
     const profile= req.body;
-    console.log(profile);
+    
     const exist= await User.findOne({email:profile.email.email});
     if(!exist){
         await User.create({name:profile.email.name,email:profile.email.email,credits:1,profilePic:profile.email.picture});
     }
    
     res.json({message:"Logged in successfully"});
+})
+app.get('/user/:email',async (req,res)=>{
+    const user_email= req.params.email;
+    const users= await User.find({email:user_email});
+    res.json(users);
 })
 app.listen(3005, async () => {
     console.log("Server Started at " + 3005);
