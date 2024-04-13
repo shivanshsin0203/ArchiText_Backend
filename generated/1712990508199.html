@@ -1,89 +1,4 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const app = express();
-const OpenAI = require("openai");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/generated", express.static(path.join(__dirname, "generated")));
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-dotenv.config();
-const mongoUrl = process.env.mongoUrl;
-const connect = async () => {
-  await mongoose.connect(mongoUrl);
-};
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  credits: Number,
-  profilePic: String,
-});
-const User = mongoose.model("user", userSchema);
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-app.post("/signin", async (req, res) => {
-  const profile = req.body;
-
-  const exist = await User.findOne({ email: profile.email.email });
-  if (!exist) {
-    await User.create({
-      name: profile.email.name,
-      email: profile.email.email,
-      credits: 1,
-      profilePic: profile.email.picture,
-    });
-  }
-
-  res.json({ message: "Logged in successfully" });
-});
-app.get("/user/:email", async (req, res) => {
-  const user_email = req.params.email;
-  const users = await User.find({ email: user_email });
-  res.json(users);
-});
-app.post("/prompt", async (req, res) => {
-  const prompt = req.body.prompt;
-  const actual_prompt =
-    "I want to " +
-    prompt +
-    ". I want you to give me a name of 2 words a title of 7 words and 5 lines of content. Specify title content  .";
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "system", content: actual_prompt }],
-      temperature: 0.9,
-      max_tokens: 150,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-    });
-
-    const content = response.choices[0].message.content;
-    console.log(content);
-    const lines = content.split("\n");
-    let name = lines[0].replace("Name: ", "").trim();
-    let title = lines[1].replace("Title: ", "").trim();
-    const contentArray = lines
-      .slice(2)
-      .filter((line) => line.trim() !== "" && !line.startsWith("Content:"))
-      .map((line) => line.replace(/^\d+\.\s*/, "").trim());
-
-    // Remove extra spaces from name, title, and content
-    name = name.replace(/\s+/g, " ");
-    title = title.replace(/\s+/g, " ");
-
-    console.log("Name:", name);
-    console.log("Title:", title);
-    console.log("Content:", contentArray);
-    const htmlTemplate = `
     <!DOCTYPE html>
     <html lang="en">
         <head>
@@ -104,7 +19,7 @@ app.post("/prompt", async (req, res) => {
                 <!-- Navigation-->
                 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
                     <div class="container px-5">
-                        <a class="navbar-brand" href="index.html">${name}</a>
+                        <a class="navbar-brand" href="index.html">Brew Bliss</a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
@@ -137,8 +52,8 @@ app.post("/prompt", async (req, res) => {
                         <div class="row gx-5 align-items-center justify-content-center">
                             <div class="col-lg-8 col-xl-7 col-xxl-6">
                                 <div class="my-5 text-center text-xl-start">
-                                    <h1 class="display-5 fw-bolder text-white mb-2">${title}</h1>
-                                    <p class="lead fw-normal text-white-50 mb-4">${contentArray[0]}</p>
+                                    <h1 class="display-5 fw-bolder text-white mb-2">Savor the Rich Aroma of Pure Joy</h1>
+                                    <p class="lead fw-normal text-white-50 mb-4">Indulge in the finest coffee experience at Brew Bliss, where every cup is brewed with passion and precision. Our carefully selected beans are roasted to perfection to bring out the rich aromas and flavors that will delight your senses. Start your day with a cup of pure joy and elevate your coffee experience with Brew Bliss.</p>
                                     <div class="d-grid gap-3 d-sm-flex justify-content-sm-center justify-content-xl-start">
                                         <a class="btn btn-primary btn-lg px-4 me-sm-3" href="#features">Get Started</a>
                                         <a class="btn btn-outline-light btn-lg px-4" href="#!">Learn More</a>
@@ -158,23 +73,23 @@ app.post("/prompt", async (req, res) => {
                                 <div class="row gx-5 row-cols-1 row-cols-md-2">
                                     <div class="col mb-5 h-100">
                                         <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-collection"></i></div>
-                                        <h2 class="h5">Fast Dilevery</h2>
-                                        <p class="mb-0">Products ordered will be dilevered as soon as possible</p>
+                                        <h2 class="h5">Featured title</h2>
+                                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
                                     </div>
                                     <div class="col mb-5 h-100">
                                         <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-building"></i></div>
-                                        <h2 class="h5">Quality Products</h2>
-                                        <p class="mb-0">We ensure a good quaility of all our products</p>
+                                        <h2 class="h5">Featured title</h2>
+                                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
                                     </div>
                                     <div class="col mb-5 mb-md-0 h-100">
                                         <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
-                                        <h2 class="h5">Money Back</h2>
-                                        <p class="mb-0">Guarantee of money back on and damage to recived product</p>
+                                        <h2 class="h5">Featured title</h2>
+                                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
                                     </div>
                                     <div class="col h-100">
                                         <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
-                                        <h2 class="h5">Payment Integration</h2>
-                                        <p class="mb-0">Payment can be made through our website easily</p>
+                                        <h2 class="h5">Featured title</h2>
+                                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
                                     </div>
                                 </div>
                             </div>
@@ -189,7 +104,7 @@ app.post("/prompt", async (req, res) => {
                             <div class="col-lg-8 col-xl-6">
                                 <div class="text-center">
                                     <h2 class="fw-bolder">Some of our Products</h2>
-                                    <p class="lead fw-normal text-muted mb-5">${contentArray[1]}</p>
+                                    <p class="lead fw-normal text-muted mb-5">Products:</p>
                                 </div>
                             </div>
                         </div>
@@ -299,32 +214,4 @@ app.post("/prompt", async (req, res) => {
         </body>
     </html>
     
-      `;
-
-    const filename = `${Date.now()}.html`;
-    const filePath = path.join(__dirname, "generated", filename);
-
-    const directoryPath = path.join(__dirname, "generated");
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath);
-    }
-
-    fs.writeFileSync(filePath, htmlTemplate);
-
-    res.status(200).json({
-      message: "HTML file created successfully",
-      url: `http://localhost:3005/generated/${filename}`,
-    });
-  } catch (err) {
-    console.log(err);
-    res
-      .status(500)
-      .json({ error: "An error occurred while processing your request." });
-  }
-});
-
-app.listen(3005, async () => {
-  console.log("Server Started at " + 3005);
-  await connect();
-  console.log("Connected to database");
-});
+      
