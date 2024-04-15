@@ -53,7 +53,7 @@ app.post("/prompt", async (req, res) => {
   const actual_prompt =
     "I want to " +
     prompt +
-    ". I want you to give me a name of 2 words a title of 7 words and 5 lines of content. Specify title content  .";
+    ". I want you to give me a name of 2 words a title of 7 words and 5 lines of content. Specify title content .";
 
   try {
     const response = await openai.chat.completions.create({
@@ -65,24 +65,52 @@ app.post("/prompt", async (req, res) => {
       frequency_penalty: 0,
       presence_penalty: 0,
     });
-
+    
     const content = response.choices[0].message.content;
     console.log(content);
-    const lines = content.split("\n");
-    let name = lines[0].replace("Name: ", "").trim();
-    let title = lines[1].replace("Title: ", "").trim();
-    const contentArray = lines
-      .slice(2)
-      .filter((line) => line.trim() !== "" && !line.startsWith("Content:"))
-      .map((line) => line.replace(/^\d+\.\s*/, "").trim());
+    const lines = content.trim().split("\n");
 
-    // Remove extra spaces from name, title, and content
+    // Initialize variables to hold the extracted data.
+    let name = "";
+    let title = "";
+    let contentArray = [];
+    
+    // Use loop to process each line.
+    lines.forEach((line) => {
+      // Check if the line contains the name.
+      if (line.startsWith("Name: ")) {
+        name = line.replace("Name: ", "").trim();
+      }
+      // Check if the line contains the title.
+      else if (line.startsWith("Title: ")) {
+        title = line.replace("Title: ", "").trim().replace(/"/g, ""); // Remove quotation marks
+      }
+      // Check if the line contains the content.
+      else if (line.startsWith("Content:")) {
+        // Nothing to do here, as the actual content starts in the following lines.
+      }
+      // Lines with numeric bullet points are considered as part of the content.
+      else if (line.match(/^\d+\./)) {
+        contentArray.push(line.replace(/^\d+\.\s*/, "").trim());
+      }
+    });
+    
+    // Remove extra spaces from name and title.
     name = name.replace(/\s+/g, " ");
     title = title.replace(/\s+/g, " ");
-
+    
+    // Output the results.
     console.log("Name:", name);
     console.log("Title:", title);
     console.log("Content:", contentArray);
+    const image=await openai.images.generate({  model:"dall-e-2",
+    prompt:`${title} `,
+    size:"1024x1024",
+    quality:"standard",
+    n:1,})
+       console.log(image)
+      
+
     const htmlTemplate = `
     <!DOCTYPE html>
     <html lang="en">
@@ -145,7 +173,7 @@ app.post("/prompt", async (req, res) => {
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-5 col-xxl-6 d-none d-xl-block text-center"><img class="img-fluid rounded-3 my-5" src="https://dummyimage.com/600x400/343a40/6c757d" alt="..." /></div>
+                            <div class="col-xl-5 col-xxl-6 d-none d-xl-block text-center"><img class="img-fluid rounded-3 my-5" src=${image.data[0].url} alt="..." /></div>
                         </div>
                     </div>
                 </header>
@@ -322,7 +350,15 @@ app.post("/prompt", async (req, res) => {
       .json({ error: "An error occurred while processing your request." });
   }
 });
-
+app.post('/test',async(req,res)=>{
+    const er=await openai.images.generate({  model:"dall-e-2",
+     prompt:"a white siamese cat",
+     size:"1024x1024",
+     quality:"standard",
+     n:1,})
+        console.log(er)
+        res.json({url:er.data[0].url})
+})
 app.listen(3005, async () => {
   console.log("Server Started at " + 3005);
   await connect();
