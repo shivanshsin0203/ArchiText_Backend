@@ -12,6 +12,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/generated", express.static(path.join(__dirname, "generated")));
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const { url } = require("inspector");
+const { title } = require("process");
 dotenv.config();
 const mongoUrl = process.env.mongoUrl;
 const connect = async () => {
@@ -23,8 +25,13 @@ const userSchema = new mongoose.Schema({
   credits: Number,
   profilePic: String,
 });
+const webSchema = new mongoose.Schema({
+    email: String,
+    url: String,
+    title: String,
+});
 const User = mongoose.model("user", userSchema);
-
+const Web = mongoose.model("websites", webSchema);
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -47,9 +54,15 @@ app.post("/signin", async (req, res) => {
 app.get("/user/:email", async (req, res) => {
   const user_email = req.params.email;
   const users = await User.find({ email: user_email });
+  
   res.json(users);
 });
 app.post("/prompt", async (req, res) => {
+    const email=req.body.email;
+    const checkCredits= await User.findOne({email:email});
+    if(checkCredits.credits<=0){
+        res.json({message:"You have insufficient credits"})
+    }
   const prompt = req.body.prompt;
   const actual_prompt =
     "I want to " +
@@ -123,7 +136,8 @@ app.post("/prompt", async (req, res) => {
     }
 
     fs.writeFileSync(filePath, htmlTemplate);
-
+    const create=await Web.create({email:email,url:`http://localhost:3005/generated/${filename}`,title:name});
+      
     res.status(200).json({
       message: "HTML file created successfully",
       url: `http://localhost:3005/generated/${filename}`,
