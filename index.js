@@ -54,8 +54,8 @@ app.post("/signin", async (req, res) => {
 app.get("/user/:email", async (req, res) => {
   const user_email = req.params.email;
   const users = await User.find({ email: user_email });
-  
-  res.json(users);
+  const websites = await Web.find({ email:user_email });
+  res.json({users,websites});
 });
 app.post("/prompt", async (req, res) => {
     const email=req.body.email;
