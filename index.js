@@ -63,6 +63,8 @@ app.post("/prompt", async (req, res) => {
     if(checkCredits.credits<=0){
         res.json({message:"You have insufficient credits"})
     }
+    checkCredits.credits=checkCredits.credits-1;
+    await checkCredits.save();
   const prompt = req.body.prompt;
   const actual_prompt =
     "I want to " +
@@ -158,6 +160,13 @@ app.post('/test',async(req,res)=>{
         console.log(er)
         res.json({url:er.data[0].url})
 })
+app.post('/creditsIn',async(req,res)=>{
+    const email=req.body.email;
+    const user=await User.findOne({email:email});
+    user.credits=user.credits+1;
+    await user.save();
+    res.json({message:"Credits deducted"})
+});
 app.listen(3005, async () => {
   console.log("Server Started at " + 3005);
   await connect();
