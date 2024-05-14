@@ -44,7 +44,7 @@ app.post("/signin", async (req, res) => {
     await User.create({
       name: profile.email.name,
       email: profile.email.email,
-      credits: 1,
+      credits: 2,
       profilePic: profile.email.picture,
     });
   }
@@ -164,7 +164,7 @@ app.post('/test',async(req,res)=>{
 app.post('/creditsIn',async(req,res)=>{
     const email=req.body.email;
     const user=await User.findOne({email:email});
-    user.credits=user.credits+1;
+    user.credits=user.credits+3;
     await user.save();
     res.json({message:"Credits deducted"})
 });
