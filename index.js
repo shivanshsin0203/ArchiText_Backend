@@ -62,6 +62,7 @@ app.post("/prompt", async (req, res) => {
     const checkCredits= await User.findOne({email:email});
     if(checkCredits.credits<=0){
         res.json({message:"You have insufficient credits"})
+        return;
     }
     checkCredits.credits=checkCredits.credits-1;
     await checkCredits.save();
