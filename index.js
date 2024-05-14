@@ -44,7 +44,7 @@ app.post("/signin", async (req, res) => {
     await User.create({
       name: profile.email.name,
       email: profile.email.email,
-      credits: 2,
+      credits: 3,
       profilePic: profile.email.picture,
     });
   }
@@ -168,6 +168,10 @@ app.post('/creditsIn',async(req,res)=>{
     await user.save();
     res.json({message:"Credits deducted"})
 });
+app.get('/start',async(req,res)=>{
+    res.json({message:"Server started"})
+
+})
 app.listen(3005, async () => {
   console.log("Server Started at " + 3005);
   await connect();
