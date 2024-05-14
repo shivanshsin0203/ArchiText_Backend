@@ -139,11 +139,11 @@ app.post("/prompt", async (req, res) => {
     }
 
     fs.writeFileSync(filePath, htmlTemplate);
-    const create=await Web.create({email:email,url:`http://localhost:3005/generated/${filename}`,title:name});
+    const create=await Web.create({email:email,url:`https://architext-backend.onrender.com/generated/${filename}`,title:name});
       
     res.status(200).json({
       message: "HTML file created successfully",
-      url: `http://localhost:3005/generated/${filename}`,
+      url: `https://architext-backend.onrender.com/generated/${filename}`,
     });
   } catch (err) {
     console.log(err);
