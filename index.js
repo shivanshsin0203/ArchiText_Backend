@@ -41,6 +41,7 @@ app.post("/signin", async (req, res) => {
 
   const exist = await User.findOne({ email: profile.email.email });
   if (!exist) {
+    console.log("Creating new user");
     await User.create({
       name: profile.email.name,
       email: profile.email.email,
@@ -60,10 +61,12 @@ app.get("/user/:email", async (req, res) => {
 app.post("/prompt", async (req, res) => {
     const email=req.body.email;
     const checkCredits= await User.findOne({email:email});
+    console.log(checkCredits.credits +" credits left")
     if(checkCredits.credits<=0){
         res.json({message:"You have insufficient credits"})
         return;
     }
+    else{
     checkCredits.credits=checkCredits.credits-1;
     await checkCredits.save();
   const prompt = req.body.prompt;
@@ -71,7 +74,7 @@ app.post("/prompt", async (req, res) => {
     "I want to " +
     prompt +
     ". I want you to give me a name of 2 words a title of 7 words and 5 lines of content. Specify title content .";
-
+  console.log("Now credits are "+checkCredits.credits);
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -151,7 +154,7 @@ app.post("/prompt", async (req, res) => {
       .status(500)
       .json({ error: "An error occurred while processing your request." });
   }
-});
+}});
 app.post('/test',async(req,res)=>{
     const er=await openai.images.generate({  model:"dall-e-2",
      prompt:"a white siamese cat",
@@ -164,8 +167,10 @@ app.post('/test',async(req,res)=>{
 app.post('/creditsIn',async(req,res)=>{
     const email=req.body.email;
     const user=await User.findOne({email:email});
+    console.log("adding to "+email+" credits are "+user.credits)
     user.credits=user.credits+3;
     await user.save();
+    console.log("added 3 credits to "+email+" credits are "+user.credits)
     res.json({message:"Credits deducted"})
 });
 app.get('/start',async(req,res)=>{
